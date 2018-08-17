@@ -12,6 +12,13 @@
     }
 }
 
+@mixin border-none(){
+    position: relative;
+    &::after{
+        display: none;
+    }
+}
+
 
 @mixin bgImg($url) {
     background-image: url($url+'@2x.png');
