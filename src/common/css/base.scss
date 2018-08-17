@@ -3,7 +3,19 @@ body,html{
     font-weight: 200px;
     font-family:'PingFang SC','STHeitiSC-Light'
 }
-
+// 清除浮动的样式
+.clearfix{
+    display: inline-block;
+    &::after{
+        display: block;
+        content: '';
+       height:0;
+       line-height: 0;
+        width: 0;
+        clear: both;
+        visibility: hidden;
+    }
+}
 
 
 
