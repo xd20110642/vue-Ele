@@ -1,7 +1,10 @@
 <template>
   <div id="app">
-     <heade></heade>
-      <div class="tab">
+    <!-- 组件传值 -->
+     <heade
+      :seller="seller"
+     ></heade>
+      <div class="tab border-1px">
         <div class="tab-item">
           <router-link to="/goods">商品</router-link>
         </div>
@@ -14,7 +17,6 @@
         </div>
       </div>
         <router-view></router-view>
-     
   </div>
 </template>
 
@@ -23,6 +25,25 @@
 import heade from './components/header/header.vue'
 export default {
   name: 'App',
+  data(){
+    return{
+      seller:{}
+    }
+  },
+  methods:{
+    getSeller(){//获取seller数据
+    this.$http.get('/api/seller').then((result) => {
+      if(result.status==200){
+        this.seller=result.data.data;
+      }     
+    }).catch((err) => {
+      console.error(err)
+    });
+    }
+  },
+  created(){
+    this.getSeller()
+  },
   components:{
     heade
   }
@@ -30,6 +51,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "./common/css/minin.scss";
+
 #app{
  .tab{
     display: flex;
@@ -37,7 +60,8 @@ export default {
     width: 100%;
     line-height: 40px;
     justify-content: space-around;
-    border-bottom: 1px solid rgba(7, 17, 27, 0.1);
+    // 引入scss函数
+     @include border-1px(rgba(7, 17, 27, 0.1));
     .tab-item{
       font-size: 14px;
       color: rgba(7, 17, 27, 0.2);

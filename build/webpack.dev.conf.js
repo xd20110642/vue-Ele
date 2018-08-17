@@ -50,7 +50,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     watchOptions: {
       poll: config.dev.poll,
     },
-    // 配置假数据接口api
+    // 配置假数据接口api       ====>    /api/seller这个就是我们调用接口的名称
     before(app){
       app.get('/api/seller',(req,res) => {
         res.json({
