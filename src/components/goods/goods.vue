@@ -4,15 +4,17 @@
         <div class="menu-wrapper" ref="meunWrapper">
             <ul>
                 <!-- 'current' ====> 这个写法是 字符串 -->
-                <li v-for="(item,index) of goods" :key="index" class="meun-item" :class="{'current':currentIndex==index}">
+                <li v-for="(item,index) of goods" :key="index" class="meun-item" :class="{'current':currentIndex === index}"
+                @click="sellectMenu(index)"
+                >
                     <span class="text">
-                        <!-- 图标组件 -->
+                        <!-- 图标组件  [currentIndex==index ? 'current' : '']-->
                         <span v-show="item.type>0" class="icon">
                             <icon
                             :type="item.type"
                             >
                             </icon>
-                        </span>{{item.name}}
+                        </span>{{item.name}}  
                     </span>
                 </li>
             </ul>
@@ -20,10 +22,10 @@
         <!-- 详情列表 -->
         <div class="foods-wrapper" ref="foodWrapper">
             <ul>
-                <li v-for="(item,index) of goods" class="food-list" :key="index">
+                <li v-for="(item,index) of goods" class="food-list food-list-hock" :key="index">
                     <h1 class="title">{{item.name}}</h1>
                     <ul>
-                     <li v-for="(food,index) of item.foods" :key="index" class="food-item food-list-hock">
+                     <li v-for="(food,index) of item.foods" :key="index" class="food-item">
                         <div class="icon">
                             <img :src="food.icon" alt="" width="57" height="57">
                         </div>
@@ -51,7 +53,8 @@
 <script>
 import icon from "../Tubiao/icon.vue"
 import BScroll from 'better-scroll';
-
+let a;
+let b;
 export default {
     data(){
         return{
@@ -64,7 +67,13 @@ export default {
         getMess(){//获取信息
             this.$http.get('/api/goods').then((result) => {
                 if(result.status==200){
-                    this.goods=result.data.data
+                    this.goods=result.data.data;
+                     
+                    this.$nextTick(() =>{
+                            this._calculateHeight();
+                            this._initScroll();
+                      })
+      
                 }
                 console.log(this.goods)
             }).catch((err) => {
@@ -72,39 +81,52 @@ export default {
             });
         },
         _initScroll(){//初始化 滚动插件
-            let a= new BScroll(this.$refs.meunWrapper,{});
-            console.log(a)
+             a= new BScroll(this.$refs.meunWrapper,{
+               click:true, //运行点击事件
+            });
 
-            let b=new BScroll(this.$refs.foodWrapper,{
+
+             b=new BScroll(this.$refs.foodWrapper,{
                 probeType:3 //
             });
 
             b.on('scroll',(pos) => { //监听滚动事件 
                 this.scrollY=Math.abs(Math.round(pos.y)) ;
+                // console.log(this.scrollY)
             })
-             console.log(b)
+        
         },
         _calculateHeight(){//获取高度
             let foodList=this.$refs.foodWrapper.getElementsByClassName('food-list-hock'); //获取全部的li
            let height=0;//定义临时变量
-           console.log(foodList.length)
+        //    console.log(foodList.length)
            this.listHeight.push(height); //这个是初始默认数组中有一个,然后进入 循环
            for(let i=0;i<foodList.length;i++){
                let item=foodList[i];
                height+=item.clientHeight;//视口的大小 就是我们能看见的高度的大小  获得累加的高度
                this.listHeight.push(height)
            }
+           console.log(foodList)
+        },
+        sellectMenu(index){
+            console.log(index);
+            let foodList=this.$refs.foodWrapper.getElementsByClassName('food-list-hock');
+            let el=foodList[index]//获取我们选择的标题
+            b.scrollToElement(el,300);//调用接口 点击跳转的接口
+        
+        
+        
+        
         }   
     },
     created(){
         this.getMess();
+        
     },
     mounted(){
-        this._initScroll();
-        
-        this.$nextTick(() => {
-            this._calculateHeight()
-        })
+        // this._initScroll();
+                    
+                     
         
     },
     props:{
@@ -113,7 +135,7 @@ export default {
         }
     },
     computed:{
-        currentIndex(newValue,oldValue){
+        currentIndex(){//返回现在是第几个
             for(let i=0;i<this.listHeight.length;i++){
                 // 获取区间上下的范围
                 let height1=this.listHeight[i];
@@ -121,8 +143,10 @@ export default {
                 // 落在某个区间  为什么有一个!height 是因为最后一个height 不存在   
                 // 利用了 逻辑短路  因为当！height为假的时候  说明是在数组的范围内   而且执行的是判断后面的操作  如果为真 说明不在数组的范围内，并且由于
                 // 逻辑短路 那么就会直接 返回return i;
-                if(!height2||(this.scrollY>height1&&this.scrollY<height2)){
+                if(!height2||(this.scrollY>=height1&&this.scrollY<height2)){
+                     console.log(i+'~')
                     return i;
+                   
                 }
             }
             return 0;
@@ -131,6 +155,11 @@ export default {
     ,
     components:{
         icon
+    },
+    watch:{
+        scrollY(){
+            console.log(this.currentIndex)
+        }
     }
 }
 </script>
@@ -155,14 +184,7 @@ export default {
                 height: 54px;
                 line-height: 14px;
                 padding: 0 12px;
-                .current{
-                    background-color: white;
-                    position: relative;
-                    margin-top: -1px;
-                    font-weight: 700;
-                    z-index: 10;
-                    
-                }
+               
                  .text{
                      display: table-cell;
                      width: 56px;
@@ -252,4 +274,12 @@ export default {
            }
         }
     }
+     .current{
+                    background-color: white;
+                    position: relative;
+                    margin-top: -1px;
+                    font-weight: 700;
+                    z-index: 10;
+                    
+                }
 </style>
