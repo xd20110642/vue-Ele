@@ -47,12 +47,24 @@
                 </li>
             </ul>
         </div>
+        <!-- 购物车组件 -->
+        <div class="shopcart">
+            <!-- 这个地方使用的是商家的信息 而我们在这个goods组件只是获取了 商品的信息  所以我们必须 我们必须接受到 商家的信息 
+            就通过路由视图 来传递信息
+            -->
+            <shop-car
+            :deliveryPrice="seller.deliveryPrice"
+            :minPrice="seller.minPrice"
+            
+            ></shop-car>
+        </div>
     </div>
 </template>
 
 <script>
 import icon from "../Tubiao/icon.vue"
 import BScroll from 'better-scroll';
+import shopCar from '../shopcar/shopcar.vue'
 let a;
 let b;
 export default {
@@ -68,7 +80,6 @@ export default {
             this.$http.get('/api/goods').then((result) => {
                 if(result.status==200){
                     this.goods=result.data.data;
-                     
                     this.$nextTick(() =>{
                             this._calculateHeight();
                             this._initScroll();
@@ -130,7 +141,7 @@ export default {
         
     },
     props:{
-        seller:{
+        seller:{ //这个接受的是 传递进来的商家 信息
             type:Object
         }
     },
@@ -154,7 +165,8 @@ export default {
     }
     ,
     components:{
-        icon
+        icon,
+        shopCar
     },
     watch:{
         scrollY(){
@@ -273,6 +285,7 @@ export default {
                }
            }
         }
+        
     }
      .current{
                     background-color: white;
@@ -282,4 +295,12 @@ export default {
                     z-index: 10;
                     
                 }
+    .shopcart{
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 99;
+        width: 100%;
+        height: 48px;
+        }
 </style>

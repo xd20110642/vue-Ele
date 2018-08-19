@@ -9,14 +9,17 @@
           <router-link to="/goods">商品</router-link>
         </div>
         <div class="tab-item">
-          <router-link to="/ratings">评价</router-link>
-          
+          <router-link to="/ratings" >评价</router-link>
         </div>
         <div class="tab-item">
           <router-link to="/seller">商家</router-link>
         </div>
       </div>
-        <router-view></router-view>
+      <!-- router-view 动态传参   由 router-view传递给goods组件  然后再由goods组件传递给 shopcar组件   同理其实也传递给了 rating
+      和seller组件只是 他们没有接受
+    因为goods组件需要这个 seller
+      -->
+        <router-view :seller="seller"></router-view>
   </div>
 </template>
 
@@ -39,6 +42,10 @@ export default {
     }).catch((err) => {
       console.error(err)
     });
+    },
+    test(){
+     this.$store.dispatch('g')
+      console.log(this.$store.state.test02)
     }
   },
   created(){
