@@ -1,6 +1,6 @@
 <template>
     <div class="shopcar">
-       <div class="content">
+       <div class="content" @click="toggleList">
            <div class="content-left">
                <div class="logo-wrapper">
                    <!-- 条件渲染  如果成立就渲染 不成立就不渲染 -->
@@ -8,7 +8,7 @@
                        <i class="icon-shopping_cart" :class="{'highlight':totalCount>0}"></i>
                    </div>
                    <!-- 如果有就显示 没有就不显示 -->
-                   <div class="num" v-show="totalCount">
+                   <div class="num" v-show="totalCount" id="bage">
                        {{totalCount}}
                    </div>
                </div>
@@ -16,16 +16,49 @@
                <div class="desc">另需配送费{{deliveryPrice}}元</div>
            </div>
             <div class="content-right">
-                <div class="pay">
-                    ￥{{totaler}}
+                <div class="pay" :class="payClass">
+                   {{totaler}}
                 </div>
             </div>
        </div>
+       <!-- 添加动画 -->
+       <transition name="fold">
+        <div class="shopcart-list" v-show="listShow">
+            <div class="list-header">
+                <h1 class="title">购物车</h1>
+                <span class="empty">清空</span>
+            </div>
+            <div class="list-content">
+                <ul>
+                    <!-- 遍历我们选中的数据 -->
+                    <li class="food" v-for="(food,index) of selectFoods" :key="index">
+                        <span class="name">{{food.name}}</span>
+                        <div class="price">
+                            <span>￥{{food.price*food.count}}</span>
+                        </div>
+                        <div class="cartcontrol-wrapper">
+                            <!-- 引入按钮组件 传入我们选着的食物-->
+                            <cartcontrol
+                            :food="food"
+                            ></cartcontrol>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+       </transition>
     </div>
 </template>
 
 <script>
+import cartcontrol from "../cartcontrol/cartcontrol.vue" //按钮组件
 export default {
+    data(){
+        return{
+           
+            fold:true,
+        }
+    },
    props: {
 			deliveryPrice: {
 				type: Number,
@@ -39,10 +72,7 @@ export default {
                 type:Array,
                 default(){//如果类型是数组和object 设置默认值需要 返回的是一个函数
                     return [
-                        {
-                            price:10,
-                            count:1
-                        }
+                       
                     ]
                 }
             }
@@ -73,16 +103,45 @@ export default {
                 count+=food.count;
             });
             return count;
-            },
+            }, 
             totaler(){//计算起送价钱
                 let sum=0;
+                if(this.toalPrice ===0 ){
+                     return `￥${this.minPrice}元起送`;
+                }
               if(this.minPrice>parseInt(this.toalPrice)){
                   sum=Math.abs(this.minPrice-parseInt(this.toalPrice));
-                  return `还差${sum}元起送`;
+                  return `还差￥${sum}元起送`;
               }else{
                    sum = parseInt(this.toalPrice);
                      return `去结算`;
               }
+            },
+            payClass(){//计算样式
+                   if (this.toalPrice>=this.minPrice){
+                       return `highlight`
+                   }else{
+                       return `not-enough`
+                   } 
+            },
+            listShow(){
+                if(!this.totalCount){//非0为真
+                    this.fold=true;
+                    return false;
+                }
+                let show=!this.fold;
+                return show;
+            }
+        },
+        components:{
+            cartcontrol
+        },
+        methods:{
+            toggleList(){
+                if(!this.totalCount){
+                    return;
+                }
+                this.fold=!this.fold;
             }
         }
 
@@ -185,8 +244,49 @@ export default {
                     color: rgba(255,255,255,.4);
                     font-weight: 700;
                     background-color: #2b333b;
+                    &.highlight{
+                        background-color: #00b43c;
+                        color: #fff;
+                    }
+                    &.not-enough{
+                        background-color: #2b333b
+                    }
                 }
             }
         }
+        .shopcart-list{
+            position: absolute;
+            top: 0; //相对于父盒子为0
+            left:0;
+            z-index: -1;//从下面上来 
+            width: 100%;
+            .list-header{
+                height: 40px;
+                line-height: 40px;
+                text-align: center;
+                padding: 0 18px;
+                background: #f3f5f7;
+                border-bottom: 1px solid rgba(7, 17, 27, .1);
+                .title{
+                    float: left; 
+                    font-size: 14px;
+                    color: rgb(7, 17, 27)
+                }
+                .empty{
+                    float: right;
+                }
+            }
+        }
+      
     }
+//       // 动画样式属性
+    .fold-enter-to, .fold-leave{
+     transition: all .4s linear;//过渡效果
+      transform: translate3d(0,0,0); //回到初始位置
+    }
+.fold-enter, .fold-leave-to /* .fade-leave-active below version 2.1.8 */ {
+     opacity: 0;
+     transform: translate3d(0,-100%,0);//动画效果  动画开始的时候的位置
+      transition: all .4s linear;
+}
 </style>

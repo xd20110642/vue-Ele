@@ -40,8 +40,14 @@
                                 <span>￥{{food.price}}</span>
                                 <span v-show="food.oldPrice" class="oldPrice">￥{{food.oldPrice}}</span>
                             </div>
-                        </div>
+                             <!-- 按钮组件 传入food-->
+                             <div class="cartcontrol-wrapper">
+                                  <cartcontrol
+                                  :food="food"
+                                  ></cartcontrol>
+                             </div>
                        
+                        </div>
                     </li>
                     </ul>
                 </li>
@@ -55,7 +61,7 @@
             <shop-car
             :deliveryPrice="seller.deliveryPrice"
             :minPrice="seller.minPrice"
-            
+            :selectFoods="selectFoods"
             ></shop-car>
         </div>
     </div>
@@ -65,6 +71,7 @@
 import icon from "../Tubiao/icon.vue"
 import BScroll from 'better-scroll';
 import shopCar from '../shopcar/shopcar.vue'
+import cartcontrol from "../cartcontrol/cartcontrol.vue"
 let a;
 let b;
 export default {
@@ -98,7 +105,8 @@ export default {
 
 
              b=new BScroll(this.$refs.foodWrapper,{
-                probeType:3 //
+                probeType:3, //
+                click:true //添加点击事件
             });
 
             b.on('scroll',(pos) => { //监听滚动事件 
@@ -117,7 +125,6 @@ export default {
                height+=item.clientHeight;//视口的大小 就是我们能看见的高度的大小  获得累加的高度
                this.listHeight.push(height)
            }
-           console.log(foodList)
         },
         sellectMenu(index){
             console.log(index);
@@ -155,23 +162,34 @@ export default {
                 // 利用了 逻辑短路  因为当！height为假的时候  说明是在数组的范围内   而且执行的是判断后面的操作  如果为真 说明不在数组的范围内，并且由于
                 // 逻辑短路 那么就会直接 返回return i;
                 if(!height2||(this.scrollY>=height1&&this.scrollY<height2)){
-                     console.log(i+'~')
+                   
                     return i;
                    
                 }
             }
             return 0;
+        },
+        selectFoods(){
+            let foods=[];
+            // 因为使用vue.set（）所以修改了全局的对象
+          this.goods.forEach( goods => { //这里是热销榜 
+              goods.foods.forEach((food) => {//热销榜里面的食物
+                    if(food.count){
+                        foods.push(food)
+                    }
+              })
+           })
+            return foods;
         }
     }
     ,
     components:{
         icon,
-        shopCar
+        shopCar,
+        cartcontrol
     },
     watch:{
-        scrollY(){
-            console.log(this.currentIndex)
-        }
+        
     }
 }
 </script>
@@ -281,6 +299,11 @@ export default {
                              font-weight: 700;
                               color: rgb(147, 153, 159);
                        }
+                   }
+                   .cartcontrol-wrapper{
+                       position: absolute;
+                       right: 0;
+                        bottom: 12px;
                    }
                }
            }
