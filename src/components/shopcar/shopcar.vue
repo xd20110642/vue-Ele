@@ -1,4 +1,5 @@
 <template>
+<div>
     <div class="shopcar">
        <div class="content" @click="toggleList">
            <div class="content-left">
@@ -15,23 +16,25 @@
                <div class="price" :class="{'highlight':toalPrice>0}">￥{{toalPrice}}</div>
                <div class="desc">另需配送费{{deliveryPrice}}元</div>
            </div>
-            <div class="content-right">
+           <!-- 阻止冒泡 是想上冒泡 -->
+            <div class="content-right" @click.stop="pay">
                 <div class="pay" :class="payClass">
                    {{totaler}}
                 </div>
             </div>
        </div>
        <!-- 添加动画 -->
-       <transition name="fold">
-        <div class="shopcart-list" v-show="listShow">
+      <transition name="fold">
+        <div class="shopcart-list" v-show="listShow" >
+             
             <div class="list-header">
                 <h1 class="title">购物车</h1>
-                <span class="empty">清空</span>
+                <span class="empty" @click="empty">清空</span>
             </div>
-            <div class="list-content">
+            <div class="list-content" ref="listContent">
                 <ul>
                     <!-- 遍历我们选中的数据 -->
-                    <li class="food" v-for="(food,index) of selectFoods" :key="index">
+                    <li class="food" v-for="(food,index) of selectFoods" :key="index+1" >
                         <span class="name">{{food.name}}</span>
                         <div class="price">
                             <span>￥{{food.price*food.count}}</span>
@@ -45,18 +48,26 @@
                     </li>
                 </ul>
             </div>
+             
         </div>
-       </transition>
+      </transition>
     </div>
+    <transition name="fade">
+        <div class="list-mask" v-show="listShow" @click="hadelist"></div>
+    </transition>
+    
+</div>    
 </template>
 
 <script>
 import cartcontrol from "../cartcontrol/cartcontrol.vue" //按钮组件
+import BScollr from "better-scroll";
+let a;
 export default {
     data(){
         return{
            
-            fold:true,
+            fold:false,
         }
     },
    props: {
@@ -130,6 +141,18 @@ export default {
                     return false;
                 }
                 let show=!this.fold;
+                console.log('show'+show);
+                if(show){
+                       this.$nextTick(() => {
+                    if(!a){
+                a=new BScollr(this.$refs.listContent,{
+                          click:true
+                         })
+                         }else{
+                             a.refresh()
+                         }
+                    })
+                }
                 return show;
             }
         },
@@ -142,7 +165,27 @@ export default {
                     return;
                 }
                 this.fold=!this.fold;
+            },
+            empty(){
+                this.selectFoods.forEach((food) => {
+                    food.count=0;
+                });              
+            },
+            hadelist(){
+                this.fold=true;
+                console.log(this.fold)
+            },
+            pay(){
+                // 判断价格是否满足最低价钱
+                if(this.toalPrice<this.minPrice){
+                    return;
+                }
+                alert("动动脑子，这个能支付吗？");
             }
+        },
+        mounted(){
+           
+          
         }
 
    
@@ -150,6 +193,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../../common/css/minin.scss";
     .shopcar{
         width: 100%;
         height: 48px;
@@ -256,10 +300,18 @@ export default {
         }
         .shopcart-list{
             position: absolute;
-            top: 0; //相对于父盒子为0
+            top:0; //相对于父盒子为0
             left:0;
-            z-index: -1;//从下面上来 
             width: 100%;
+            z-index: -1;
+            transform:translate3d(0,-100%,0);
+            // 添加动画
+            &.fold-enter-active,&.fold-leave-active{
+                 transition:all .5s;
+            }
+            &.fold-enter,&.fold-leave-active{
+                 transform:translate3d(0,0,0);
+            }        
             .list-header{
                 height: 40px;
                 line-height: 40px;
@@ -274,19 +326,64 @@ export default {
                 }
                 .empty{
                     float: right;
+                    font-size: 12px;
+                    color: rgb(0, 160, 220)
                 }
+            }
+            .list-content{
+                padding: 0 18px;
+                max-height: 217px;
+                background: #fff;
+                overflow: hidden;
+                .food{
+                    position: relative;
+                    padding: 12px 0;
+                    box-sizing: border-box;
+                    @include border-1px(rgba(7, 17, 27, .1));
+                    .name{
+                        line-height:24px;
+                        font-size: 14px;
+                        color: rgb(7, 17, 27);
+                    }
+                    .price{
+                        position: absolute;
+                        right: 90px;
+                        bottom: 12px;
+                        line-height: 24px;
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: red;
+                    }
+                    .cartcontrol-wrapper{
+                        position: absolute;
+                        right: 0;
+                        bottom: 6px;
+                    }
+                }               
             }
         }
       
     }
-//       // 动画样式属性
-    .fold-enter-to, .fold-leave{
-     transition: all .4s linear;//过渡效果
-      transform: translate3d(0,0,0); //回到初始位置
+    .list-mask{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        // 这里需要写展示的最终效果 下面只是写一个过渡的效果
+        opacity: 1;
+        background-color: rgba(7, 17, 27, .6);
+        &.fade-enter-active, &.fade-leave-active {
+        transition: all .5s;
+        opacity: 1;
+         background-color: rgba(7, 17, 27, .6);
+        }
+        .fade-enter, .fade-leave-to{
+         opacity: 0;
+        }
     }
-.fold-enter, .fold-leave-to /* .fade-leave-active below version 2.1.8 */ {
-     opacity: 0;
-     transform: translate3d(0,-100%,0);//动画效果  动画开始的时候的位置
-      transition: all .4s linear;
-}
+      
+       
+       
 </style>
